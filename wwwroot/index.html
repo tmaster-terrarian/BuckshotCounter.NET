@@ -1,0 +1,524 @@
+<!DOCTYPE html>
+<html lang="en">
+    <head>
+        <meta charset="utf-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1" />
+        <title>buckshot-counter</title>
+        <style>
+            @import url('font.css');
+
+            :root {
+                font-family: 'JetBrains Mono', 'Consolas', 'Courier New', Courier, monospace;
+                background: #1f1f1f;
+                color: #c3c3c3;
+            }
+
+            .clear {
+                all: unset;
+            }
+
+            *, :before, :after {
+                box-sizing: border-box;
+            }
+
+            main {
+                width: min(100%, 64ch);
+                margin: auto;
+            }
+
+            #text-input {
+                border: none;
+                border-radius: 10px;
+                background: #101010;
+                font-family: inherit;
+                font-size: 0.833333333rem;
+                color: inherit;
+                resize: none;
+                overflow: hidden;
+                padding: 4px;
+                border: 2px solid transparent;
+
+                box-sizing: content-box;
+
+                min-width: 3ch;
+                width: 3ch;
+
+                padding-inline: 4px;
+                padding-block: 4px;
+
+                height: calc(1rem + 2px);
+
+                margin-block-end: 0;
+
+                outline: none;
+
+                transition: cubic-bezier(0.25, 0.46, 0.45, 0.94) border-color 0.1s;
+            }
+            #text-input:focus {
+                border-color: white;
+            }
+            #text-input:invalid {
+                border-color: red;
+            }
+            #text-input:focus:invalid {
+                border-color: #fe4848;
+            }
+
+            .desc b {
+                color: #b0b0b0;
+            }
+
+            #live, .live, .desc.live b {
+                color: #fa6868;
+            }
+            #blank, .blank, .desc.blank b {
+                color: cornflowerblue;
+            }
+
+            #live, #blank {
+                margin-inline: 1ch;
+            }
+
+            ul {
+                width: fit-content;
+            }
+
+            li {
+                margin: 0;
+            }
+
+            li:not(.desc) {
+                line-height: 1.67em;
+            }
+
+            b, .counter-button {
+                font-weight: 900;
+            }
+
+            a, a:visited, spab {
+                color: #c3c3c3;
+                text-decoration: none;
+                font-weight: 500;
+            }
+            spab {
+                color: #a3a3a3;
+            }
+            a:hover {
+                color: white;
+                text-decoration: underline;
+            }
+
+            .counter-button {
+                cursor: pointer;
+                user-select: none;
+
+                padding-inline: 2px;
+                margin-inline: 4px;
+
+                border-radius: 8px;
+
+                /* outline-width: 2px;
+                outline-style: solid;
+                outline-color: transparent; */
+
+                position: relative;
+
+                color: #c3c3c3;
+            }
+            .counter-button:hover {
+                color: white;
+            }
+
+            .c-dark {
+                color: #606060;
+                opacity: 0;
+            }
+            .counter-button:focus-visible .c-dark {
+                color: white;
+                opacity: 0;
+            }
+
+            .counter-button::before {
+                color: #606060;
+                display: inline-block;
+                position: absolute;
+                bottom: 0;
+                left: 2px;
+                content: "[";
+                font-weight: 600;
+                transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) left;
+            }
+            .counter-button::after {
+                color: #606060;
+                display: inline-block;
+                position: absolute;
+                bottom: 0;
+                right: 2px;
+                content: "]";
+                font-weight: 600;
+                transition: 0.1s cubic-bezier(0.25, 0.46, 0.45, 0.94) right;
+            }
+            .counter-button:focus-visible::before, .counter-button:hover::before {
+                left: 0;
+            }
+            .counter-button:focus-visible::after, .counter-button:hover::after {
+                right: 0;
+            }
+            .counter-button:focus-visible::before {
+                color: white;
+            }
+            .counter-button:focus-visible::after {
+                color: white;
+            }
+
+            h1, label {
+                font-size: 1rem;
+                margin-block: 8px;
+                font-weight: normal;
+            }
+
+            p, .desc {
+                font-size: 0.8rem;
+                color: #909090;
+                margin-block-start: 0;
+                margin-block: 4px;
+            }
+
+            ul.desc {
+                margin-block: 0;
+            }
+            p:has(+ul.desc) {
+                margin-block-end: 0;
+            }
+            ul.desc li {
+                line-height: calc(1rem + 1px);
+            }
+
+            label {
+                cursor: text;
+            }
+
+            button {
+                font-size: 0.833333333rem;
+            }
+
+            table {
+                border-spacing: 0;
+            }
+
+            tbody {
+                vertical-align: top;
+            }
+
+            td {
+                padding: 0;
+                padding-inline: 0;
+            }
+
+            .d {
+                min-width: 6ch;
+            }
+
+            .p-1 {
+                padding-right: 1ch;
+            }
+
+            hr {
+                border: none;
+                height: 1px;
+                background-color: #606060;
+                margin-block: 1em;
+            }
+
+            .footer {
+                display: flex;
+                flex-direction: row;
+                justify-content: space-between;
+                gap: 2rem;
+            }
+
+            .footer > div {
+                width: 50%;
+            }
+
+            .layout {
+                display: flex;
+                flex-direction: row;
+                flex-wrap: nowrap;
+                justify-content: space-between;
+                margin-block: 1em;
+            }
+
+            @media (max-width: 425px) {
+                .layout {
+                    display: block;
+
+                    table {
+                        margin-block-start: 1em;
+                    }
+                }
+
+                .footer {
+                    display: block;
+                }
+
+                .footer > div {
+                    width: 100%;
+                }
+            }
+        </style>
+        <script>(() => window.addEventListener("DOMContentLoaded", () => {
+
+            let live = 0;
+            let blank = 0;
+
+            const liveCounter = document.getElementById('live');
+            const blankCounter = document.getElementById('blank');
+            const blankChance = document.getElementById('blankChance');
+            const liveChance = document.getElementById('liveChance');
+
+            const localApp = true;
+
+            if(localApp)
+            {
+                const links = document.getElementsByTagName('a');
+                Array.from(links).forEach(link => {
+                    link.addEventListener('click', event => {
+                        event.preventDefault();
+                        event.stopPropagation();
+                        event.stopImmediatePropagation();
+                        window.external.sendMessage(link.href);
+                    });
+                });
+            }
+
+            document.getElementById('incLive').addEventListener('click', () => {
+                live++;
+                refreshValues();
+            });
+
+            document.getElementById('incBlank').addEventListener('click', () => {
+                blank++;
+                refreshValues();
+            });
+
+            document.getElementById('decLive').addEventListener('click', () => {
+                if(live > 0)
+                {
+                    live--;
+                    refreshValues();
+                }
+            });
+
+            document.getElementById('decBlank').addEventListener('click', () => {
+                if(blank > 0)
+                {
+                    blank--;
+                    refreshValues();
+                }
+            });
+
+            /**@type {HTMLInputElement}*/
+            const textInput = document.getElementById('text-input');
+
+            const textInputPattern = /(\d+|\*)-(\d+|\*)/;
+            textInput.pattern = `(\\d+|\\*)-(\\d+|\\*)`;
+
+            textInput.addEventListener('dblclick', () => {
+                textInput.setSelectionRange(0, textInput.value.length, "forward");
+            });
+
+            textInput.addEventListener('input', () => {
+                refreshInputWidth();
+            });
+
+            function refreshInputWidth()
+            {
+                let min = textInput.placeholder.length;
+                if(textInput.value.length > 0) min = 3;
+                textInput.style.width = Math.max(min, textInput.value.length).toString() + 'ch';
+            }
+
+            textInput.addEventListener('keydown', event => {
+                if(event.key == "Enter")
+                    textSubmit();
+            });
+
+            textInput.addEventListener('submit', () => {
+                textSubmit();
+            });
+
+            function textSubmit() {
+                if(!textInput.checkValidity()) return;
+
+                textInput.blur();
+
+                if(textInput.value === null || textInput.value === "")
+                {
+                    if(textInput.value === "")
+                    {                        
+                        live = 0;
+                        blank = 0;
+                        refreshValues();
+                    }
+                    return;
+                }
+
+                const match = textInputPattern.exec(textInput.value);
+
+                if(match === null || match.length < 3) return;
+
+                live = match[1] === '*' ? live : Number(match[1]);
+                blank = match[2] === '*' ? blank : Number(match[2]);
+
+                refreshValues();
+            }
+
+            function refreshValues() {
+                if(live == 0 && blank == 0)
+                {
+                    liveCounter.innerText = '?';
+                    blankCounter.innerText = '?';
+                    liveCounter.style.paddingInlineStart = '0';
+                    blankCounter.style.paddingInlineStart = '0';
+
+                    liveChance.innerText = '?';
+                    blankChance.innerText = '?';
+                    return;
+                }
+
+                textInput.placeholder = `${live}-${blank}`;
+                refreshInputWidth();
+
+                liveCounter.innerText = live.toString();
+                blankCounter.innerText = blank.toString();
+
+                liveCounter.style.paddingInlineStart = (blankCounter.innerText.length - liveCounter.innerText.length) + 'ch';
+                blankCounter.style.paddingInlineStart = (liveCounter.innerText.length - blankCounter.innerText.length) + 'ch';
+
+                if(live != 0)
+                {
+                    const val = (Math.round((live/(blank+live)) * 10000) / 100).toString();
+                    if(blank == 0)
+                        liveChance.innerText = '100%';
+                    else if(val === "100")
+                        liveChance.innerText = '~100%';
+                    else if(val === "0")
+                        liveChance.innerText = '<0.01%';
+                    else if(val === "NaN")
+                        liveChance.innerText = '?';
+                    else
+                        liveChance.innerText = val + '%';
+                }
+                else
+                    liveChance.innerText = '0%';
+
+                if(blank != 0)
+                {
+                    const val = (Math.round((blank/(blank+live)) * 10000) / 100).toString();
+                    if(live == 0)
+                        blankChance.innerText = '100%';
+                    else if(val === "100")
+                        blankChance.innerText = '~100%';
+                    else if(val === "0")
+                        blankChance.innerText = '<0.01%';
+                    else if(val === "NaN")
+                        blankChance.innerText = '?';
+                    else
+                        blankChance.innerText = val + '%';
+                }
+                else
+                    blankChance.innerText = '0%';
+            }
+
+        }))()</script>
+    </head>
+    <body>
+        <main>
+            <section>
+                <h1>buckshot-counter: keep track of your shells</h1>
+                <p class="desc">
+                    use the [<b>+</b>] and [<b>-</b>] buttons to change values, or type the values manually below
+                </p>
+                <div class="layout">
+                    <ul style="list-style-type: none; padding-left: 0; margin-block: 0;">
+                        <li><button role="button" tabindex="1" id="incLive" class="clear counter-button"><span class="c-dark">[</span>+<span class="c-dark">]</span></button><button role="button" tabindex="2" id="decLive" class="clear counter-button"><span class="c-dark">[</span>-<span class="c-dark">]</span></button><span id="live">?</span>Live</li>
+                        <li><button role="button" tabindex="3" id="incBlank" class="clear counter-button"><span class="c-dark">[</span>+<span class="c-dark">]</span></button><button role="button" tabindex="4" id="decBlank" class="clear counter-button"><span class="c-dark">[</span>-<span class="c-dark">]</span></button><span id="blank">?</span>Blank</li>
+                    </ul>
+                    <table>
+                        <tbody>
+                            <tr>
+                                <td class="desc">
+                                    <b>INFO</b>
+                                </td>
+                                <!-- <td class="desc" style="border-bottom: 1px currentColor solid;"></td> -->
+                            </tr>
+                            <tr>
+                                <td class="desc p-1">chance of live:</td>
+                                <td class="desc d"><b id="liveChance">?</b></td>
+                            </tr>
+                            <tr>
+                                <td class="desc p-1">chance of blank:</td>
+                                <td class="desc d"><b id="blankChance">?</b></td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </section>
+            <section>
+                <h1 style="margin-block-end: 0;">
+                    <label for="text-input">manual input:</label>
+                    <input type="text" id="text-input" name="text-input" minlength="3" maxlength="31" placeholder="?-?" autofocus></input>
+                </h1>
+                <p class="desc">notes for manual input:</p>
+                <ul class="desc" style="list-style-type: none; padding-left: 0;">
+                    <li>- format must match the pattern <b>X-X</b> (where each <b>X</b> is either a number or an <b>*</b>)</li>
+                    <li>- the number order is <b><span class="live">LIVE</span>-<span class="blank">BLANK</span></b></li>
+                    <li>- using an <b>*</b> preserves the corresponding value</li>
+                    <li>- leave blank or type <b>0-0</b> to reset</li>
+                </ul>
+            </section>
+            <hr>
+            <section>
+                <!-- <details open> -->
+                    <!-- <summary> -->
+                        <h1 style="display: inline;">credits</h1>
+                    <!-- </summary> -->
+                    <div class="desc footer">
+                        <div>
+                            <p>
+                                created by<br>
+                                <a href="https://bscit.dev/" target="_blank">bscit</a>
+                            </p>
+                            <p>
+                                tested by<br>
+                                <spab>evolutio</spab>
+                            </p>
+                            <p>
+                                with additional feedback from<br>
+                                <a href="https://mikeythemike.neocities.org/" target="_blank">mikey the goober</a>,
+                                <a href="https://www.youtube.com/@EseehcruoykcufI" target="_blank">dough</a>,
+                                <spab>qp</spab>
+                            </p>
+                        </div>
+                        <div>
+                            <p>
+                                license<br>
+                                <a href="https://git.sr.ht/~bscit/buckshot-counter/blob/main/LICENSE" target="_blank">MIT</a>
+                            </p>
+                            <p>
+                                source<br>
+                                <a href="https://git.sr.ht/~bscit/buckshot-counter" target="_blank">sr.ht</a>,
+                                <a href="https://github.com/tmaster-terrarian/buckshot-counter" target="_blank">github (mirror)</a>
+                            </p>
+                            <p>
+                                online version<br>
+                                <a href="https://tmaster-terrarian.github.io/buckshot-counter/" target="_blank">github pages</a>
+                            </p>
+                        </div>
+                    </div>
+                <!-- </details> -->
+            </section>
+        </main>
+    </body>
+</html>
