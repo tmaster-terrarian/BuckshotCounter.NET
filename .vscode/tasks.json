@@ -20,6 +20,7 @@
             "args": [
                 "publish",
                 "${workspaceFolder}/BuckshotCounter.NET.csproj",
+                "/property:SelfContained=true",
                 "/property:GenerateFullPaths=true",
                 "/consoleloggerparameters:NoSummary;ForceNoAlign"
             ],

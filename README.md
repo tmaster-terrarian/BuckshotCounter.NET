@@ -1,2 +1,2 @@
 # BuckshotCounter.NET
- fully-local .NET port of buckshot-counter
+Fully-local .NET port of [buckshot-counter](https://git.sr.ht/~bscit/buckshot-counter)
